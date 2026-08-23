@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>GPA — Horas Extras</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',Arial,sans-serif}
+body{background:#f3f4f6;min-height:100vh}
+.hidden{display:none!important}
+/* LOGIN */
+#loginScreen{min-height:100vh;background:#1e3a6e;display:flex;align-items:center;justify-content:center;padding:16px}
+.login-box{background:#fff;border-radius:20px;box-shadow:0 8px 32px rgba(0,0,0,.3);padding:36px 32px;width:100%;max-width:380px}
+.login-logo{width:110px;height:110px;margin:0 auto 12px;display:block}
+h1{font-size:20px;color:#1e3a6e;font-weight:800;text-align:center}
+.sub{font-size:13px;color:#9ca3af;text-align:center;margin-top:4px;margin-bottom:20px}
+label{display:block;font-size:12px;color:#6b7280;margin-bottom:4px;margin-top:14px}
+input,textarea,select{width:100%;border:1px solid #d1d5db;border-radius:10px;padding:10px 14px;font-size:14px;outline:none;transition:border .2s;background:#fff}
+input:focus,textarea:focus,select:focus{border-color:#3b82f6;box-shadow:0 0 0 2px rgba(59,130,246,.2)}
+.pass-wrap{position:relative}.pass-wrap input{padding-right:64px}
+.toggle-pass{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:12px;color:#9ca3af}
+.btn{width:100%;padding:12px;border-radius:12px;border:none;cursor:pointer;font-weight:700;font-size:14px;transition:background .2s,transform .1s}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:#1e3a6e;color:#fff}.btn-primary:hover{background:#162d57}
+.btn-primary:disabled{background:#d1d5db;cursor:not-allowed;transform:none}
+.btn-green{background:#16a34a;color:#fff;padding:10px}.btn-green:hover{background:#15803d}
+.btn-red{background:#ef4444;color:#fff;padding:10px}.btn-red:hover{background:#dc2626}
+.btn-orange{background:#ea580c;color:#fff;padding:10px}
+.btn-csv{background:#15803d;color:#fff;margin-bottom:12px}
+.btn-sm{padding:8px 16px;width:auto;font-size:13px;border-radius:8px}
+.btn-xs{padding:5px 10px;width:auto;font-size:12px;border-radius:6px;border:none;cursor:pointer;font-weight:600}
+.err-msg{background:#fef2f2;color:#dc2626;border-radius:8px;padding:10px 14px;font-size:13px;margin-top:10px}
+/* LOADING */
+.loading-overlay{position:fixed;inset:0;background:rgba(30,58,110,.7);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;gap:14px}
+.loading-spinner{width:44px;height:44px;border:4px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+.loading-text{color:#fff;font-size:14px;font-weight:600}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* APP */
+#appScreen{display:none;flex-direction:column;min-height:100vh}
+.app-header{background:#1e3a6e;color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.header-logo{width:40px;height:40px;margin-right:10px;flex-shrink:0}
+.header-title{font-weight:800;font-size:15px}
+.header-sub{font-size:11px;color:#93c5fd;margin-top:2px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700}
+.badge-op{background:#2563eb}.badge-jefe{background:#15803d}.badge-ger{background:#7c3aed}.badge-admin{background:#374151}
+.clock-time{font-family:monospace;font-size:16px;font-weight:700;text-align:right}
+.clock-date{font-size:11px;color:#93c5fd;text-align:right}
+.btn-logout{background:transparent;border:1px solid #4b83c4;color:#93c5fd;padding:4px 10px;border-radius:8px;cursor:pointer;font-size:12px;margin-left:8px}
+.btn-logout:hover{color:#fff}
+.tabs{display:flex;background:#fff;border-bottom:1px solid #e5e7eb;overflow-x:auto}
+.tab{flex:1;min-width:80px;padding:11px 6px;border:none;background:none;cursor:pointer;font-size:12px;font-weight:600;color:#6b7280;white-space:nowrap;border-bottom:2px solid transparent}
+.tab.active{color:#1e3a6e;border-bottom-color:#1e3a6e;background:#eff6ff}
+.content{padding:16px;max-width:1100px;margin:0 auto;width:100%;padding-bottom:48px}
+/* CARDS */
+.profile-card{background:#1e4d8c;color:#fff;border-radius:14px;padding:16px;display:flex;align-items:center;gap:14px;margin-bottom:12px}
+.avatar{width:48px;height:48px;border-radius:50%;background:#2563eb;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:17px;flex-shrink:0}
+.card{background:#fff;border-radius:14px;box-shadow:0 1px 4px rgba(0,0,0,.08);padding:16px;margin-bottom:12px}
+.card-title{font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px}
+/* LFT */
+.lft-bar{border-radius:10px;padding:12px 16px;display:flex;align-items:flex-start;gap:10px;margin-bottom:12px;border-left:4px solid}
+.lft-bar.green{background:#f0fdf4;border-color:#4ade80;color:#166534}
+.lft-bar.yellow{background:#fefce8;border-color:#facc15;color:#854d0e}
+.lft-bar.red{background:#fef2f2;border-color:#f87171;color:#991b1b}
+.lft-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.dot-green{background:#22c55e}.dot-yellow{background:#eab308}.dot-red{background:#ef4444}
+/* HOURS */
+.hours-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:8px}
+.hour-btn{padding:12px 4px;border-radius:12px;border:2px solid #e5e7eb;background:#f9fafb;font-weight:700;font-size:13px;cursor:pointer;transition:all .1s;color:#374151}
+.hour-btn.selected{background:#1e3a6e;color:#fff;border-color:#1e3a6e;transform:scale(1.05)}
+/* ÁRBOL */
+.porq-step{background:#fff;border-radius:14px;box-shadow:0 1px 4px rgba(0,0,0,.08);padding:16px;margin-bottom:12px;border-left:4px solid #3b82f6}
+.porq-step.done{border-left-color:#22c55e;background:#f0fdf4}
+.step-header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.step-num{width:28px;height:28px;border-radius:50%;background:#3b82f6;color:#fff;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.step-num.done{background:#22c55e}
+.step-title{font-weight:700;font-size:14px;color:#1f2937}
+.step-sub{font-size:12px;color:#6b7280;margin-top:1px}
+.opts{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:4px}
+.opt-btn{padding:10px 12px;border-radius:10px;border:2px solid #e5e7eb;background:#f9fafb;font-size:13px;cursor:pointer;color:#374151;text-align:left;font-weight:500}
+.opt-btn:hover{border-color:#93c5fd;background:#eff6ff}
+.opt-btn.full{grid-column:1/-1}
+.answer-disp{background:#eff6ff;border-radius:8px;padding:8px 12px;font-size:13px;color:#1e3a6e;font-weight:600;display:flex;justify-content:space-between;align-items:center}
+.change-btn{background:none;border:none;cursor:pointer;font-size:11px;color:#6b7280;text-decoration:underline}
+.causa-ok{background:#f0fdf4;border:1px solid #86efac;border-radius:12px;padding:14px;margin-bottom:12px}
+.causa-ok-title{font-size:11px;font-weight:700;color:#166534;text-transform:uppercase;margin-bottom:8px}
+.causa-row{display:flex;gap:8px;font-size:13px;margin-bottom:4px}
+.causa-lbl{color:#6b7280;min-width:110px;flex-shrink:0}
+.causa-val{color:#1f2937;font-weight:600}
+/* CHIPS */
+.chip{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+.chip-ok{background:#dcfce7;color:#166534}
+.chip-alerta{background:#fef9c3;color:#854d0e}
+.chip-bloqueado,.chip-rechazado{background:#fee2e2;color:#991b1b}
+.chip-pendiente{background:#fef9c3;color:#854d0e}
+.chip-autorizado{background:#dcfce7;color:#166534}
+/* SEMÁFORO */
+.sem-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;display:inline-block;vertical-align:middle}
+.sd-verde{background:#22c55e;box-shadow:0 0 6px #22c55e}
+.sd-amarillo{background:#eab308;box-shadow:0 0 6px #eab308}
+.sd-rojo{background:#ef4444;box-shadow:0 0 6px #ef4444}
+.sd-negro{background:#111827;box-shadow:0 0 6px #6b7280}
+/* INFO */
+.info-bar{background:#f9fafb;border:1px solid #e5e7eb;border-radius:12px;padding:10px 16px;display:flex;justify-content:space-between;font-size:12px;color:#6b7280;margin-bottom:12px;flex-wrap:wrap;gap:6px}
+.alert-orange{background:#fff7ed;border:1px solid #fb923c;border-radius:10px;padding:12px 16px;font-size:13px;color:#9a3412;font-weight:600;margin-bottom:12px}
+/* MONITOR TABLE */
+.monitor-filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
+.filter-select{padding:7px 12px;border:2px solid #e5e7eb;border-radius:10px;font-size:13px;background:#fff;color:#374151;cursor:pointer;font-weight:600;outline:none}
+.filter-select:focus{border-color:#3b82f6}
+.monitor-table-wrap{background:#fff;border-radius:14px;box-shadow:0 1px 4px rgba(0,0,0,.08);overflow:hidden;margin-bottom:12px}
+.monitor-table{width:100%;border-collapse:collapse;font-size:13px}
+.monitor-table th{background:#1e3a6e;color:#fff;padding:10px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+.monitor-table td{padding:10px 12px;border-bottom:1px solid #f3f4f6;vertical-align:middle}
+.monitor-table tr:last-child td{border-bottom:none}
+.monitor-table tr:hover td{background:#f9fafb}
+.monitor-table .num{font-weight:700;color:#1e3a6e;font-size:12px}
+.horas-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-weight:700;font-size:12px}
+.hb-verde{background:#dcfce7;color:#166534}
+.hb-amarillo{background:#fef9c3;color:#854d0e}
+.hb-rojo{background:#fee2e2;color:#991b1b}
+.hb-negro{background:#1f2937;color:#fff}
+/* SOLICITUDES */
+.reg-card{background:#fff;border-radius:14px;box-shadow:0 1px 4px rgba(0,0,0,.08);padding:16px;margin-bottom:10px}
+.reg-causa{font-size:12px;color:#374151;margin-top:6px;background:#f9fafb;border-radius:8px;padding:8px 10px}
+.reg-id{font-size:11px;color:#9ca3af;margin-top:4px}
+.btn-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+/* TABLA GENERAL */
+.table-wrap{overflow-x:auto;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.08);background:#fff}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:#f9fafb;padding:8px 10px;text-align:left;font-size:11px;color:#6b7280;font-weight:700;text-transform:uppercase;border-bottom:2px solid #e5e7eb}
+td{padding:10px;border-bottom:1px solid #f3f4f6;vertical-align:middle}
+tr:hover td{background:#f9fafb}
+/* SUMMARY */
+.summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}
+.sum-card{background:#fff;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.07);padding:12px;text-align:center}
+.sum-icon{font-size:20px}.sum-val{font-size:20px;font-weight:800;color:#1e3a6e}.sum-lbl{font-size:11px;color:#9ca3af;margin-top:2px}
+/* SÁBADOS */
+.personal-sel{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.personal-tag{display:inline-flex;align-items:center;gap:4px;background:#eff6ff;border:1px solid #93c5fd;border-radius:20px;padding:4px 10px;font-size:12px;color:#1e3a6e;font-weight:600}
+.tag-x{background:none;border:none;cursor:pointer;color:#6b7280;font-size:14px;line-height:1;padding:0}
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px;z-index:100}
+.modal-box{background:#fff;border-radius:20px;box-shadow:0 8px 32px rgba(0,0,0,.3);padding:24px;width:100%;max-width:460px;max-height:90vh;overflow-y:auto}
+.modal-title{font-weight:800;font-size:16px;color:#1e3a6e;margin-bottom:16px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.empty{background:#fff;border-radius:14px;padding:40px 16px;text-align:center;color:#9ca3af}
+.hist-toggle{width:100%;background:none;border:none;cursor:pointer;color:#2563eb;font-size:12px;font-weight:600;padding:8px;text-align:center}
+@media(max-width:600px){.summary-grid{grid-template-columns:repeat(2,1fr)}.hours-grid{grid-template-columns:repeat(3,1fr)}.form-grid{grid-column:1fr}.monitor-table{font-size:11px}}
+</style>
+</head>
+<body>
+
+<!-- LOADING OVERLAY -->
+<div class="loading-overlay hidden" id="loadingOverlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-text" id="loadingText">Cargando...</div>
+</div>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <svg class="login-logo" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <defs><radialGradient id="lg" cx="50%" cy="45%" r="55%"><stop offset="0%" stop-color="#29b6f6"/><stop offset="100%" stop-color="#0d47a1"/></radialGradient></defs>
+      <ellipse cx="100" cy="100" rx="92" ry="88" fill="url(#lg)"/>
+      <path d="M18 135 Q35 115 55 130 Q75 148 95 130 Q115 112 135 130 Q155 148 175 132 Q185 142 182 155 Q160 175 130 180 Q100 185 70 178 Q40 170 20 152 Z" fill="#0d47a1" opacity="0.55"/>
+      <text x="100" y="88" text-anchor="middle" font-family="Arial Black,sans-serif" font-weight="900" font-size="58" fill="white" letter-spacing="-1">GPA</text>
+      <text x="100" y="116" text-anchor="middle" font-family="Arial,sans-serif" font-weight="700" font-size="20" fill="#bbdefb" letter-spacing="8">AQUA</text>
+      <path d="M28 142 Q48 128 68 142 Q88 156 108 142 Q128 128 148 142 Q163 152 178 142" stroke="white" stroke-width="2.5" fill="none" opacity="0.6"/>
+    </svg>
+    <h1>GPA Operaciones</h1>
+    <p class="sub">Sistema de Registro de Horas Extras</p>
+    <label>Número de empleado</label>
+    <input type="text" id="loginNum" placeholder="Ej. 8197" inputmode="numeric" onkeydown="if(event.key==='Enter')doLogin()"/>
+    <label>Contraseña</label>
+    <div class="pass-wrap">
+      <input type="password" id="loginPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/>
+      <button class="toggle-pass" onclick="togglePass()">Ver</button>
+    </div>
+    <div id="loginErr" class="err-msg hidden"></div>
+    <br/>
+    <button class="btn btn-primary" onclick="doLogin()" id="btnLogin">Iniciar sesión</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="appScreen">
+  <div class="app-header">
+    <div style="display:flex;align-items:center">
+      <svg class="header-logo" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <defs><radialGradient id="lgh" cx="50%" cy="45%" r="55%"><stop offset="0%" stop-color="#29b6f6"/><stop offset="100%" stop-color="#0d47a1"/></radialGradient></defs>
+        <ellipse cx="100" cy="100" rx="92" ry="88" fill="url(#lgh)"/>
+        <text x="100" y="88" text-anchor="middle" font-family="Arial Black,sans-serif" font-weight="900" font-size="58" fill="white" letter-spacing="-1">GPA</text>
+        <text x="100" y="116" text-anchor="middle" font-family="Arial,sans-serif" font-weight="700" font-size="20" fill="#bbdefb" letter-spacing="8">AQUA</text>
+      </svg>
+      <div>
+        <div class="header-title">GPA Operaciones</div>
+        <div class="header-sub" id="headerSub"></div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div><div class="clock-time" id="clockTime"></div><div class="clock-date" id="clockDate"></div></div>
+      <button class="btn-logout" onclick="doLogout()">Salir</button>
+    </div>
+  </div>
+  <div class="tabs hidden" id="tabsBar">
+    <button class="tab" id="tabMon" onclick="switchTab('monitor')">📊 Monitor</button>
+    <button class="tab" id="tabRegs" onclick="switchTab('registros')">📋 Solicitudes</button>
+    <button class="tab" id="tabForm" onclick="switchTab('form')">⏱ Mis Horas</button>
+    <button class="tab" id="tabSab" onclick="switchTab('sabados')">📅 Sábados</button>
+    <button class="tab" id="tabUsr" onclick="switchTab('usuarios')">👥 Usuarios</button>
+  </div>
+  <div class="content" id="mainContent"></div>
+</div>
+
+<!-- MODAL USUARIO -->
+<div class="modal-overlay hidden" id="modalUsr">
+  <div class="modal-box">
+    <div class="modal-title" id="modalUsrTitle">Nuevo usuario</div>
+    <div class="form-grid">
+      <div><label>N° Empleado *</label><input id="fu_num"/></div>
+      <div><label>Contraseña</label><input id="fu_pass" placeholder="GPA2026"/></div>
+      <div style="grid-column:1/-1"><label>Nombre completo *</label><input id="fu_nombre"/></div>
+      <div><label>Puesto</label><input id="fu_puesto"/></div>
+      <div><label>Ubicación</label><input id="fu_ubicacion"/></div>
+      <div><label>Departamento</label><input id="fu_depto"/></div>
+      <div><label>Rol *</label>
+        <select id="fu_rol"><option value="operario">Operario</option><option value="jefe">Jefe</option><option value="gerente">Gerente</option><option value="admin">Admin</option></select>
+      </div>
+      <div><label>N° Jefe directo</label><input id="fu_jefe"/></div>
+      <div><label>N° Gerente autorizador</label><input id="fu_gerente"/></div>
+      <div><label>Email</label><input id="fu_email" type="email"/></div>
+      <div><label>Estatus</label><select id="fu_activo"><option value="true">Activo</option><option value="false">Baja</option></select></div>
+    </div>
+    <div id="modalUsrErr" class="err-msg hidden" style="margin-top:10px"></div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn btn-primary" onclick="guardarUsuario()">Guardar</button>
+      <button class="btn" style="background:#f3f4f6;color:#374151" onclick="closeModalUsr()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL SÁBADO -->
+<div class="modal-overlay hidden" id="modalSab">
+  <div class="modal-box">
+    <div class="modal-title">Solicitar Sábado Laborado</div>
+    <label>Fecha del sábado *</label>
+    <input type="date" id="fs_fecha"/>
+    <label style="margin-top:12px">Personal a convocar *</label>
+    <div style="display:flex;gap:8px;margin-top:6px">
+      <select id="fs_personal_sel" style="flex:1"><option value="">-- Seleccionar empleado --</option></select>
+      <button class="btn-xs btn-primary" onclick="agregarPersonal()">+ Agregar</button>
+    </div>
+    <div class="personal-sel" id="personalSelList"></div>
+    <div id="sabArbol" style="margin-top:12px"></div>
+    <div id="modalSabErr" class="err-msg hidden" style="margin-top:10px"></div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn btn-primary" onclick="guardarSabado()">Enviar solicitud</button>
+      <button class="btn" style="background:#f3f4f6;color:#374151" onclick="closeModalSab()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+// ÁRBOL 5 PORQUÉS
+// ══════════════════════════════════════════════════════
+const ARBOL=[
+  {id:'apoyo_ruta',label:'Apoyo a Ruta',p1:'¿A qué ruta o unidad apoyaste?',p1t:'text',p1ph:'Ej. Ruta 12 / Unidad 045',p2:'¿Por qué la ruta necesitó apoyo?',p2ops:['Chofer enfermo o ausente','Volumen de entrega alto','Falla mecánica de unidad','Ruta extensa / tiempo insuficiente','Accidente o incidente vial','Otro'],p3ops:{'Chofer enfermo o ausente':['Enfermedad repentina','Falta sin aviso','Permiso de último momento','Rotación insuficiente'],'Volumen de entrega alto':['Pedido urgente','Temporada alta no prevista','Acumulación de pedidos','Error en planeación'],'Falla mecánica de unidad':['Mantenimiento omitido','Unidad con antigüedad elevada','Falla imprevista','Sin unidad sustituta'],'Ruta extensa / tiempo insuficiente':['Ruta mal dimensionada','Tráfico extraordinario','Paradas no programadas','Cliente con horario restringido'],'Accidente o incidente vial':['Condiciones viales adversas','Choque o percance','Revisión de autoridades','Otro'],'Otro':['Causa no contemplada']}},
+  {id:'apoyo_surtido',label:'Apoyo a Surtido',p1:'¿Cuántos pedidos surtiste después de tu horario?',p1t:'number',p1ph:'Número de pedidos',p2:'¿Por qué no se completó el surtido en turno?',p2ops:['Volumen de pedidos inesperado','Personal incompleto','Ubicaciones incorrectas','Sistema lento o caído','Pedidos urgentes de último momento','Rezago de turno anterior'],p3ops:{'Volumen de pedidos inesperado':['Pico de demanda','Cliente tardío','Error en planeación','Pedido express sin aviso'],'Personal incompleto':['Ausencias imprevistas','Rotación alta','Permisos no planificados','Falta de contratación'],'Ubicaciones incorrectas':['Inventario desactualizado','Error en recepción','Merma no registrada','Sin conteo cíclico'],'Sistema lento o caído':['Mantenimiento no programado','Sobrecarga','Falla de servidor','Red inestable'],'Pedidos urgentes de último momento':['Necesidad imprevista','Acuerdo de emergencia','Error en pedido original','Distribuidor sin inventario'],'Rezago de turno anterior':['Turno no completó meta','Incidente previo','Cambio de prioridades','Falta de comunicación']}},
+  {id:'recepcion',label:'Recepción de Mercancía',p1:'¿El proveedor es nacional o internacional?',p1t:'select',p1ops:['Nacional','Internacional'],p2:'¿Por qué llegó fuera de horario?',p2ops:['Retraso del proveedor','Trámites de aduana','Reprogramación de entrega','Volumen mayor al esperado','Inspección de calidad','Documentación incompleta'],p3ops:{'Retraso del proveedor':['Problema logístico','Tráfico vial','Falla en unidad','Sin comunicación previa'],'Trámites de aduana':['Documentación incompleta','Inspección aleatoria','Retraso fiscal','Agente aduanal'],'Reprogramación de entrega':['Sin aviso','Cambio por compras','Muelle ocupado','Negociación tardía'],'Volumen mayor al esperado':['Error en orden','Cantidad distinta','Cambio de empaque','Consolidación de pedidos'],'Inspección de calidad':['Anomalías en producto','Primer entrega','Muestreo especial','Discrepancia docs'],'Documentación incompleta':['Sin factura','Certificados faltantes','Error fiscal','Proveedor sin proceso']}},
+  {id:'inventario',label:'Inventario / Conteo',p1:'¿Qué tipo de inventario?',p1t:'select',p1ops:['Conteo cíclico','Inventario general','Ajuste de diferencias','Auditoría','Conteo de producto dañado'],p2:'¿Por qué fuera de horario?',p2ops:['Baja operación nocturna','Discrepancias que requirieron reconteo','No completado en turno','Auditoría de último momento','Ajuste urgente'],p3ops:{'Baja operación nocturna':['Política interna','Requerimiento de control','Acuerdo de turno','Disponibilidad de montacargas'],'Discrepancias que requirieron reconteo':['Error inicial','Sistema desactualizado','Movimientos durante conteo','Sin capacitación'],'No completado en turno':['Mayor volumen','Interrupciones','Personal insuficiente','Sin equipos'],'Auditoría de último momento':['Solicitud de dirección','Requerimiento cliente','Certificación','Discrepancia en reporte'],'Ajuste urgente':['Faltante detectado','Diferencia en embarque','Robo o merma','Error de captura']}},
+  {id:'carga',label:'Carga de Unidad',p1:'¿Número o destino de la unidad?',p1t:'text',p1ph:'Ej. Unidad 07 / Cancún',p2:'¿Por qué no se completó en turno?',p2ops:['Volumen mayor','Llegada tardía de unidad','Personal insuficiente','Producto no localizado','Cambio en pedido','Espera por documentación'],p3ops:{'Volumen mayor':['Pedido modificado','Acumulación','Error en planeación','Consolidación de rutas'],'Llegada tardía de unidad':['Retraso en ruta anterior','Problema mecánico','Tráfico','Sin comunicación'],'Personal insuficiente':['Ausencias','Poco personal','Carga simultánea','Sin montacarguista'],'Producto no localizado':['Ubicación incorrecta','Zona equivocada','Merma no registrada','En cuarentena'],'Cambio en pedido':['Cliente modificó','Área comercial','Sustitución','Error original'],'Espera por documentación':['Sin factura','Trámite crédito','Docs incompletos','Sistema lento']}},
+  {id:'falla',label:'Falla de Equipo',p1:'¿Qué equipo falló?',p1t:'select',p1ops:['Montacargas','Transpaleta eléctrica','Banda transportadora','Sistema WMS / ERP','Impresora de etiquetas','Equipo de cómputo','Báscula','Otro'],p2:'¿Cómo afectó la operación?',p2ops:['Detuvo parcialmente','Detuvo completamente','Retraso en surtido','Retraso en recepción','Retraso en carga','Requirió proceso manual'],p3ops:{'Detuvo parcialmente':['Mantenimiento omitido','Vida útil vencida','Uso inadecuado','Falla eléctrica'],'Detuvo completamente':['Falla crítica','Sin equipo sustituto','Daño por accidente','Falla de proveedor'],'Retraso en surtido':['Escáner sin batería','Sistema lento','Impresora sin consumibles','Error de configuración'],'Retraso en recepción':['Báscula descalibrada','Sistema caído','Sin etiquetas','Cómputo bloqueado'],'Retraso en carga':['Montacargas sin batería','Rampa con falla','Sin strech','Selladora sin función'],'Requirió proceso manual':['Sin protocolo','Sin capacitación manual','Proceso más lento','Herramientas insuficientes']}},
+  {id:'ausencia',label:'Ausencia de Personal',p1:'¿Qué puesto quedó sin cubrir?',p1t:'select',p1ops:['Almacenista / Picker','Montacarguista','Chofer / Operador','Auxiliar de recepción','Supervisor de turno','Auxiliar de carga','Otro'],p2:'¿Prevista o imprevista?',p2ops:['Imprevista — falta sin aviso','Imprevista — enfermedad','Prevista — permiso sin reemplazo','Prevista — vacaciones sin cobertura','Renuncia','Accidente de trabajo'],p3ops:{'Imprevista — falta sin aviso':['Sin banco de personal','Sin política de cobertura','Comunicación tardía','Sin personal polivalente'],'Imprevista — enfermedad':['Alta rotación','Sin lista de espera','Temporada con más ausentismo','Reclutamiento lento'],'Prevista — permiso sin reemplazo':['Sin verificar cobertura','Falta de planificación','No se asignó suplente','RRHH sin candidato'],'Prevista — vacaciones sin cobertura':['Sin planeación','Vacaciones simultáneas','Sin presupuesto','Inducción lenta'],'Renuncia':['Alta rotación','Condiciones a revisar','Oferta externa','Sin proceso de retención'],'Accidente de trabajo':['Condiciones inseguras','Sin EPP','Sin capacitación','Incidente no reportado']}},
+  {id:'pedido',label:'Pedido Urgente',p1:'¿Para qué cliente o distribuidor?',p1t:'text',p1ph:'Nombre del cliente',p2:'¿Por qué es urgente?',p2ops:['Quiebre de inventario','Evento o temporada','Error en pedido anterior','Compromiso de alta dirección','Lanzamiento de producto','Reposición de emergencia'],p3ops:{'Quiebre de inventario':['No monitoreó niveles','Sin reabasto automático','Demanda mayor','Falla en comunicación'],'Evento o temporada':['No en forecast','Evento no comunicado','Cambio de fechas','Sin historial'],'Error en pedido anterior':['Picking incorrecto','Error en cantidad','Producto equivocado','Revisión insuficiente'],'Compromiso de alta dirección':['Sin validar con operaciones','Sin tiempo','Sobre capacidad','Sin comunicación'],'Lanzamiento de producto':['Sin coordinación','Inventario mal estimado','Proveedor tardío','Sin proceso'],'Reposición de emergencia':['Alertas sin funcionar','Sin nivel mínimo','Revisión infrecuente','Proveedor con entrega larga']}},
+  {id:'retraso',label:'Retraso Acumulado',p1:'¿En qué área o proceso?',p1t:'select',p1ops:['Surtido / Picking','Recepción','Carga y embarque','Acomodo y ubicación','Devoluciones','Control de inventario','Facturación / Documentación'],p2:'¿Causa principal del rezago?',p2ops:['Turno anterior no completó','Pico no previsto','Incidente que detuvo el flujo','Falta de personal','Prioridades cambiaron','Error que requirió reproceso'],p3ops:{'Turno anterior no completó':['Sin métricas por turno','Sin seguimiento','Comunicación deficiente','No se escaló a tiempo'],'Pico no previsto':['Sin forecast','Cambios tardíos','Alta variabilidad','Sin capacidad flexible'],'Incidente que detuvo el flujo':['Falla de equipo','Accidente','Área bloqueada','Espera de proveedor'],'Falta de personal':['Ausentismo','En capacitación','Turno corto','Retardos'],'Prioridades cambiaron':['Pedido urgente','Dirección cambió','Atención a cliente','Emergencia'],'Error que requirió reproceso':['Picking con errores','Producto mal ubicado','Documentación incorrecta','Carga en unidad equivocada']}}
+];
+
+// ══════════════════════════════════════════════════════
+// ESTADO
+// ══════════════════════════════════════════════════════
+let session=null, clockInt=null;
+let selectedHoras='', showHist=false, currentTab='monitor';
+let cr={cat:null,p1:null,p2:null,p3:null};
+let sabCr={cat:null,p1:null,p2:null,p3:null};
+let personalSel=[], editingUser=null;
+let cacheRegistros=[], cacheSabados=[], cacheUsuarios=[], cacheMonitor=[];
+let monFiltroSuc='todos', monFiltroPuesto='todos';
+
+// ══════════════════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════════════════
+const fmt2=n=>String(n).padStart(2,'0');
+function getNow(){const d=new Date();return{fecha:`${d.getFullYear()}-${fmt2(d.getMonth()+1)}-${fmt2(d.getDate())}`,hora:`${fmt2(d.getHours())}:${fmt2(d.getMinutes())}:${fmt2(d.getSeconds())}`,ts:d.toISOString()};}
+function lftStatus(hd){hd=parseFloat(hd)||0;if(hd>3)return{estado:'bloqueado',msg:'Horas del día superan 3h (Art. 68 LFT)',color:'red'};if(hd>=2.5)return{estado:'alerta',msg:hd+'h — cerca del límite diario',color:'yellow'};return{estado:'ok',msg:hd+'h — dentro del límite diario',color:'green'};}
+function semaforo(h){h=parseFloat(h)||0;if(h<=0)return{css:'verde',dot:'sd-verde',hb:'hb-verde',label:'Sin horas'};if(h<=3)return{css:'verde',dot:'sd-verde',hb:'hb-verde',label:'Normal'};if(h<=6)return{css:'amarillo',dot:'sd-amarillo',hb:'hb-amarillo',label:'Precaución'};if(h<=9)return{css:'rojo',dot:'sd-rojo',hb:'hb-rojo',label:'En límite'};return{css:'negro',dot:'sd-negro',hb:'hb-negro',label:'¡Excedido!'};}
+const initials=n=>n.split(' ').map(w=>w[0]).slice(0,2).join('');
+const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function semanaIni(){const h=new Date();const d=h.getDay()||7;const l=new Date(h);l.setDate(h.getDate()-(d-1));l.setHours(0,0,0,0);return l;}
+function mesIni(){const h=new Date();return new Date(h.getFullYear(),h.getMonth(),1);}
+
+// Loading helpers
+function showLoading(txt='Procesando...'){document.getElementById('loadingOverlay').classList.remove('hidden');document.getElementById('loadingText').textContent=txt;}
+function hideLoading(){document.getElementById('loadingOverlay').classList.add('hidden');}
+
+// API — con timeout para evitar bloqueos
+async function api(path,method='GET',body=null){
+  const ctrl=new AbortController();
+  const timer=setTimeout(()=>ctrl.abort(),15000);
+  try{
+    const opts={method,headers:{'Content-Type':'application/json'},signal:ctrl.signal};
+    if(body)opts.body=JSON.stringify(body);
+    const r=await fetch('/api/'+path,opts);
+    clearTimeout(timer);
+    return r.json();
+  }catch(e){
+    clearTimeout(timer);
+    if(e.name==='AbortError')throw new Error('Tiempo de espera agotado. Intenta de nuevo.');
+    throw e;
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// LOGIN
+// ══════════════════════════════════════════════════════
+function togglePass(){const i=document.getElementById('loginPass'),b=document.querySelector('.toggle-pass');i.type=i.type==='password'?'text':'password';b.textContent=i.type==='password'?'Ver':'Ocultar';}
+
+async function doLogin(){
+  const num=document.getElementById('loginNum').value.trim();
+  const pass=document.getElementById('loginPass').value;
+  const err=document.getElementById('loginErr');
+  if(!num||!pass){err.textContent='Completa todos los campos.';err.classList.remove('hidden');return;}
+  showLoading('Verificando credenciales...');
+  try{
+    const r=await api('login','POST',{num_emp:num,password:pass});
+    hideLoading();
+    if(!r.ok){err.textContent=r.error||'Credenciales incorrectas';err.classList.remove('hidden');return;}
+    session=r.user;
+    err.classList.add('hidden');
+    document.getElementById('loginScreen').style.display='none';
+    document.getElementById('appScreen').style.display='flex';
+    startClock();renderHeader();setupTabs();
+  }catch(e){hideLoading();err.textContent='Error de conexión: '+e.message;err.classList.remove('hidden');}
+}
+
+function doLogout(){
+  session=null;selectedHoras='';cr={cat:null,p1:null,p2:null,p3:null};sabCr={cat:null,p1:null,p2:null,p3:null};
+  currentTab='monitor';showHist=false;cacheRegistros=[];cacheSabados=[];cacheUsuarios=[];cacheMonitor=[];
+  clearInterval(clockInt);
+  document.getElementById('loginNum').value='';document.getElementById('loginPass').value='';
+  document.getElementById('loginScreen').style.display='flex';document.getElementById('appScreen').style.display='none';
+}
+
+function startClock(){
+  function tick(){const n=getNow();document.getElementById('clockTime').textContent=n.hora;document.getElementById('clockDate').textContent=n.fecha;}
+  tick();clockInt=setInterval(tick,1000);
+}
+
+function renderHeader(){
+  const rl={operario:'Operario',jefe:'Jefe',gerente:'Gerente',admin:'Admin'};
+  const rc={operario:'badge-op',jefe:'badge-jefe',gerente:'badge-ger',admin:'badge-admin'};
+  document.getElementById('headerSub').innerHTML=`<span>${esc(session.nombre)}</span><span class="badge ${rc[session.rol]}">${rl[session.rol]}</span><span style="color:#bfdbfe;font-size:10px">${esc(session.ubicacion||'')} · ${esc(session.depto||'')}</span>`;
+}
+
+function setupTabs(){
+  const bar=document.getElementById('tabsBar');
+  const isAdmin=session.rol==='admin';
+  // Admin: solo Monitor, Solicitudes, Usuarios
+  // Gerente/Jefe: Monitor, Solicitudes, Mis Horas, Sábados
+  // Operario: solo Mis Horas
+  if(session.rol==='operario'){bar.classList.add('hidden');currentTab='form';renderForm();return;}
+  bar.classList.remove('hidden');
+  document.getElementById('tabMon').style.display=isAdmin?'':'';
+  document.getElementById('tabRegs').style.display='';
+  document.getElementById('tabForm').style.display=isAdmin?'none':'';
+  document.getElementById('tabSab').style.display=(session.rol==='jefe'||session.rol==='gerente')?'':'none';
+  document.getElementById('tabUsr').style.display=isAdmin?'':'none';
+  switchTab('monitor');
+}
+
+function switchTab(t){
+  currentTab=t;
+  const ids={monitor:'tabMon',registros:'tabRegs',form:'tabForm',sabados:'tabSab',usuarios:'tabUsr'};
+  Object.entries(ids).forEach(([k,id])=>{const el=document.getElementById(id);if(el)el.classList.toggle('active',k===t);});
+  renderTab();
+}
+
+function renderTab(){
+  if(currentTab==='monitor')renderMonitor();
+  else if(currentTab==='registros')renderRegistros();
+  else if(currentTab==='form')renderForm();
+  else if(currentTab==='sabados')renderSabados();
+  else if(currentTab==='usuarios')renderUsuarios();
+}
+
+// ══════════════════════════════════════════════════════
+// FORMULARIO — Todos excepto admin
+// ══════════════════════════════════════════════════════
+function renderForm(){
+  const misReg=cacheRegistros.filter(r=>r.num_emp===session.num_emp);
+  const yaHoy=misReg.some(r=>r.fecha===getNow().fecha);
+  const lft=lftStatus(selectedHoras);
+  const horasSem=misReg.reduce((s,r)=>{const d=new Date(r.ts||r.fecha);return d>=semanaIni()?s+parseFloat(r.horas_dia||0):s;},0);
+  const horasConHoy=horasSem+(parseFloat(selectedHoras)||0);
+  const necesitaGerente=horasConHoy>9;
+  // Para gerentes, la autorización va al admin
+  const autorizadorNombre = session.rol==='gerente' ? 'Administrador' : (session.rol==='jefe' ? session.gerente_nombre : session.jefe_nombre);
+  const valid=!!selectedHoras&&lft.estado!=='bloqueado'&&!yaHoy&&cr.p3!==null;
+
+  let lftHtml='';
+  if(selectedHoras){
+    const dc={green:'dot-green',yellow:'dot-yellow',red:'dot-red'}[lft.color];
+    const tt={ok:'✓ Dentro de límites LFT',alerta:'⚠ Advertencia LFT',bloqueado:'✗ Bloqueado — Art. 68 LFT'}[lft.estado];
+    lftHtml=`<div class="lft-bar ${lft.color}"><div class="lft-dot ${dc}"></div><div><b>${tt}</b><div style="font-size:12px;margin-top:2px">${esc(lft.msg)}</div></div></div>`;
+  }
+
+  const sem=semaforo(horasConHoy);
+  const pct=Math.min((horasSem/9)*100,100);
+  const horasHtml=['0.5','1','1.5','2','2.5','3'].map(h=>`<button class="hour-btn${selectedHoras===h?' selected':''}" onclick="selHora('${h}')">${h}h</button>`).join('');
+  const arbolHtml=buildArbolHtml('cr',yaHoy);
+  const causaTexto=buildCausaTexto('cr');
+  let resHtml='';
+  if(causaTexto){
+    const parts=causaTexto.split(' › ');
+    const labels=['Categoría','Detalle','¿Por qué?','Causa raíz'];
+    resHtml=`<div class="causa-ok"><div class="causa-ok-title">✅ Causa raíz identificada</div>${parts.map((p,i)=>`<div class="causa-row"><span class="causa-lbl">${labels[i]||''}:</span><span class="causa-val">${esc(p)}</span></div>`).join('')}</div>`;
+  }
+
+  let histHtml='';
+  if(misReg.length>0){
+    histHtml=`<button class="hist-toggle" onclick="toggleHist()">${showHist?'▲ Ocultar':'▼ Ver'} mis registros (${misReg.length})</button>`;
+    if(showHist)misReg.forEach(r=>{histHtml+=`<div class="reg-card"><div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center"><b>${r.horas_dia}h</b><span style="font-size:12px;color:#6b7280">${r.fecha} ${r.hora_registro||''}</span><span class="chip chip-${r.estado_final||'pendiente'}">${(r.estado_final||'pendiente').toUpperCase()}</span></div><div class="reg-causa">${esc(r.causa_texto||r.causa_cat||'')}</div><div class="reg-id">ID: ${r.id}</div></div>`;});
+  }
+
+  const n=getNow();
+  document.getElementById('mainContent').innerHTML=`
+    <div class="profile-card"><div class="avatar">${esc(initials(session.nombre))}</div><div><div style="font-weight:800;font-size:15px">${esc(session.nombre)}</div><div style="font-size:12px;color:#93c5fd;margin-top:2px">${esc(session.puesto||'')}</div><div style="font-size:11px;color:#bfdbfe;margin-top:3px">${esc(session.depto||'')} · ${esc(session.ubicacion||'')} · N° ${session.num_emp}</div></div></div>
+    <div class="card">
+      <div class="card-title">Acumulado semanal</div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><div class="sem-dot ${sem.dot}"></div><div style="font-size:22px;font-weight:800">${horasSem}h <span style="font-size:13px;font-weight:500;color:#6b7280">/ 9h máx</span></div><span class="chip chip-${sem.css==='verde'?'ok':sem.css==='amarillo'?'alerta':'bloqueado'}">${sem.label}</span></div>
+      <div style="background:rgba(0,0,0,.08);border-radius:20px;height:8px;overflow:hidden;margin-bottom:8px"><div style="height:8px;border-radius:20px;background:${sem.css==='verde'?'#22c55e':sem.css==='amarillo'?'#eab308':sem.css==='rojo'?'#ef4444':'#111827'};width:${pct}%"></div></div>
+      ${necesitaGerente&&selectedHoras?`<div class="alert-orange" style="margin-bottom:0">⚠ Con estas horas superarías las 9h. La solicitud irá a <b>${esc(autorizadorNombre||'Gerente/Admin')}</b> para autorización especial.</div>`:''}
+    </div>
+    ${lftHtml}
+    <div class="card"><div class="card-title">¿Cuántas horas extra trabajaste hoy?</div><div class="hours-grid">${horasHtml}</div></div>
+    ${arbolHtml}
+    ${resHtml}
+    <div class="info-bar"><span>📅 ${n.fecha} &nbsp;🕐 ${n.hora}</span><span>Autoriza: ${esc(autorizadorNombre||'—')}</span></div>
+    ${yaHoy?`<div class="alert-orange">⚠ Ya registraste tus horas extra hoy. Solo se permite un registro por día.</div>`:''}
+    <button class="btn btn-primary" onclick="guardarHoras()" ${valid?'':'disabled'} style="margin-bottom:12px">
+      ${necesitaGerente?'Enviar para autorización especial':'Enviar solicitud'}
+    </button>
+    <button class="btn" style="background:#eff6ff;color:#1e3a6e;margin-bottom:12px;border-radius:12px;font-size:13px" onclick="recargarMisHoras()">🔄 Actualizar mis registros</button>
+    ${histHtml}`;
+
+  if(cacheRegistros.length===0)recargarMisHoras();
+}
+
+async function recargarMisHoras(){
+  try{
+    const r=await api(`registros?num_emp=${session.num_emp}&rol=operario`);
+    if(r.ok){cacheRegistros=r.data;renderForm();}
+  }catch(e){console.error(e);}
+}
+
+function selHora(h){selectedHoras=h;renderForm();}
+function toggleHist(){showHist=!showHist;renderForm();}
+
+async function guardarHoras(){
+  const lft=lftStatus(selectedHoras);
+  if(!selectedHoras||lft.estado==='bloqueado'||!cr.p3)return;
+  const misReg=cacheRegistros.filter(r=>r.num_emp===session.num_emp);
+  const horasSem=misReg.reduce((s,r)=>{const d=new Date(r.ts||r.fecha);return d>=semanaIni()?s+parseFloat(r.horas_dia||0):s;},0);
+  const nuevasSem=horasSem+parseFloat(selectedHoras);
+  const nodo=ARBOL.find(a=>a.id===cr.cat);
+  const causaTexto=buildCausaTexto('cr');
+
+  // Determinar jefe y gerente según rol
+  let jefeNum=session.jefe_num, gerenteNum=session.gerente_num;
+  if(session.rol==='jefe'){jefeNum=session.gerente_num;gerenteNum=null;}
+  if(session.rol==='gerente'){jefeNum=null;gerenteNum='0000';} // admin
+
+  showLoading('Registrando solicitud...');
+  try{
+    const r=await api('registros','POST',{
+      num_emp:session.num_emp,nombre:session.nombre,puesto:session.puesto,
+      ubicacion:session.ubicacion,depto:session.depto,
+      horas_dia:parseFloat(selectedHoras),horas_semana:nuevasSem,
+      causa_cat:nodo?.label||cr.cat,causa_p1:cr.p1,causa_p2:cr.p2,causa_p3:cr.p3,
+      causa_texto:causaTexto,estado_lft:lft.estado,
+      jefe_num:jefeNum,gerente_num:gerenteNum
+    });
+    hideLoading();
+    if(r.ok){
+      alert(`✅ Solicitud registrada correctamente.\nID: ${r.data.id}`);
+      selectedHoras='';cr={cat:null,p1:null,p2:null,p3:null};
+      cacheRegistros=[];
+      await recargarMisHoras();
+    } else alert('❌ '+r.error);
+  }catch(e){hideLoading();alert('Error: '+e.message);}
+}
+
+// ══════════════════════════════════════════════════════
+// ÁRBOL 5 PORQUÉS
+// ══════════════════════════════════════════════════════
+function buildCausaTexto(key){
+  const c=key==='cr'?cr:sabCr;if(!c.cat)return null;
+  const nd=ARBOL.find(a=>a.id===c.cat);if(!nd)return null;
+  let t=nd.label;if(c.p1)t+=` › ${c.p1}`;if(c.p2)t+=` › ${c.p2}`;if(c.p3)t+=` › ${c.p3}`;return t;
+}
+function buildArbolHtml(key,disabled){
+  if(disabled)return'';
+  const c=key==='cr'?cr:sabCr;
+  const nodo=c.cat?ARBOL.find(a=>a.id===c.cat):null;
+  let html=`<div class="porq-step${c.cat?' done':''}"><div class="step-header"><div class="step-num${c.cat?' done':''}">1</div><div><div class="step-title">¿Cuál es la categoría?</div><div class="step-sub">Selecciona la que mejor describe la situación</div></div></div>`;
+  if(c.cat)html+=`<div class="answer-disp">${esc(nodo.label)}<button class="change-btn" onclick="resetCr(0,'${key}')">Cambiar</button></div>`;
+  else{html+=`<div class="opts">`;ARBOL.forEach(a=>{html+=`<button class="opt-btn" onclick="${key==='cr'?'setCat':'setSabCat'}('${a.id}')">${a.label}</button>`;});html+=`</div>`;}
+  html+=`</div>`;if(!c.cat)return html;
+  html+=`<div class="porq-step${c.p1!==null?' done':''}"><div class="step-header"><div class="step-num${c.p1!==null?' done':''}">2</div><div><div class="step-title">${esc(nodo.p1)}</div></div></div>`;
+  if(c.p1!==null)html+=`<div class="answer-disp">${esc(c.p1)}<button class="change-btn" onclick="resetCr(1,'${key}')">Cambiar</button></div>`;
+  else if(nodo.p1t==='select'){html+=`<div class="opts">`;nodo.p1ops.forEach(o=>{html+=`<button class="opt-btn" onclick="setP1('${o.replace(/'/g,"\\'")}','${key}')">${o}</button>`;});html+=`</div>`;}
+  else html+=`<div style="display:flex;gap:8px;margin-top:4px"><input type="${nodo.p1t}" id="p1inp_${key}" placeholder="${esc(nodo.p1ph||'')}" style="flex:1"/><button class="btn btn-primary btn-sm" onclick="setP1inp('${key}')">OK</button></div>`;
+  html+=`</div>`;if(c.p1===null)return html;
+  html+=`<div class="porq-step${c.p2!==null?' done':''}"><div class="step-header"><div class="step-num${c.p2!==null?' done':''}">3</div><div><div class="step-title">${esc(nodo.p2)}</div><div class="step-sub">Primer ¿por qué?</div></div></div>`;
+  if(c.p2!==null)html+=`<div class="answer-disp">${esc(c.p2)}<button class="change-btn" onclick="resetCr(2,'${key}')">Cambiar</button></div>`;
+  else{html+=`<div class="opts">`;nodo.p2ops.forEach(o=>{html+=`<button class="opt-btn full" onclick="setP2('${o.replace(/'/g,"\\'")}','${key}')">→ ${o}</button>`;});html+=`</div>`;}
+  html+=`</div>`;if(c.p2===null)return html;
+  const p3ops=nodo.p3ops[c.p2]||[];
+  html+=`<div class="porq-step${c.p3!==null?' done':''}"><div class="step-header"><div class="step-num${c.p3!==null?' done':''}">4</div><div><div class="step-title">¿Por qué ocurrió "${esc(c.p2)}"?</div><div class="step-sub">Causa raíz</div></div></div>`;
+  if(c.p3!==null)html+=`<div class="answer-disp">${esc(c.p3)}<button class="change-btn" onclick="resetCr(3,'${key}')">Cambiar</button></div>`;
+  else{html+=`<div class="opts">`;p3ops.forEach(o=>{html+=`<button class="opt-btn full" onclick="setP3('${o.replace(/'/g,"\\'")}','${key}')">🔍 ${o}</button>`;});html+=`</div>`;}
+  html+=`</div>`;return html;
+}
+function setCat(id){cr={cat:id,p1:null,p2:null,p3:null};renderForm();}
+function setSabCat(id){sabCr={cat:id,p1:null,p2:null,p3:null};renderSabModal();}
+function setP1(v,key){if(key==='cr'){cr.p1=v;cr.p2=null;cr.p3=null;renderForm();}else{sabCr.p1=v;sabCr.p2=null;sabCr.p3=null;renderSabModal();}}
+function setP1inp(key){const i=document.getElementById('p1inp_'+key);if(i&&i.value.trim())setP1(i.value.trim(),key);}
+function setP2(v,key){if(key==='cr'){cr.p2=v;cr.p3=null;renderForm();}else{sabCr.p2=v;sabCr.p3=null;renderSabModal();}}
+function setP3(v,key){if(key==='cr'){cr.p3=v;renderForm();}else{sabCr.p3=v;renderSabModal();}}
+function resetCr(n,key){const c=key==='cr'?cr:sabCr;if(n===0){c.cat=null;c.p1=null;c.p2=null;c.p3=null;}else if(n===1){c.p1=null;c.p2=null;c.p3=null;}else if(n===2){c.p2=null;c.p3=null;}else c.p3=null;if(key==='cr')renderForm();else renderSabModal();}
+
+// ══════════════════════════════════════════════════════
+// MONITOR — TABLA con filtros
+// ══════════════════════════════════════════════════════
+async function renderMonitor(){
+  document.getElementById('mainContent').innerHTML=`<div class="empty"><div style="font-size:36px;margin-bottom:8px">⏳</div><div>Cargando monitor...</div></div>`;
+  showLoading('Cargando monitor...');
+  try{
+    const [rMon, rSab]=await Promise.all([
+      api(`monitor?num_emp=${session.num_emp}&rol=${session.rol}`),
+      api(`sabados?num_emp=${session.num_emp}&rol=${session.rol}`)
+    ]);
+    hideLoading();
+    if(!rMon.ok){document.getElementById('mainContent').innerHTML=`<div class="empty">Error al cargar el monitor</div>`;return;}
+    cacheMonitor=rMon.data||[];
+    cacheSabados=rSab.ok?rSab.data:[];
+    buildMonitorHtml();
+  }catch(e){hideLoading();document.getElementById('mainContent').innerHTML=`<div class="empty">Error de conexión: ${e.message}</div>`;}
+}
+
+function buildMonitorHtml(){
+  const data=cacheMonitor;
+
+  // Contar sábados del mes por empleado
+  const sabMes={};
+  const iniMes=mesIni();
+  (cacheSabados||[]).forEach(s=>{
+    if(s.auth_gerente==='autorizado'&&new Date(s.fecha_sabado)>=iniMes){
+      const pers=Array.isArray(s.personal)?s.personal:(typeof s.personal==='string'?JSON.parse(s.personal||'[]'):[]);
+      pers.forEach(p=>{const num=p.num_emp||p;sabMes[num]=(sabMes[num]||0)+1;});
+    }
+  });
+
+  // Listas únicas para filtros
+  const sucursales=[...new Set(data.map(e=>e.ubicacion).filter(Boolean))].sort();
+  const puestos=[...new Set(data.map(e=>e.puesto).filter(Boolean))].sort();
+
+  // Filtrar
+  let filtered=data;
+  if(monFiltroSuc!=='todos')filtered=filtered.filter(e=>e.ubicacion===monFiltroSuc);
+  if(monFiltroPuesto!=='todos')filtered=filtered.filter(e=>e.puesto===monFiltroPuesto);
+
+  // Totales
+  const totalH=filtered.reduce((s,e)=>s+parseFloat(e.horas_semana||0),0);
+  const exceden=filtered.filter(e=>e.horas_semana>9).length;
+  const enLimite=filtered.filter(e=>e.horas_semana>6&&e.horas_semana<=9).length;
+
+  // Alertas
+  const alertas=filtered.filter(e=>e.horas_semana>6);
+  let alertasHtml='';
+  if(alertas.length>0){
+    alertasHtml=`<div class="card" style="border-left:4px solid #ef4444"><div style="font-size:13px;font-weight:700;color:#991b1b;margin-bottom:10px">🚨 ${alertas.length} empleado(s) en zona de alerta esta semana</div>`;
+    alertas.forEach(e=>{
+      const s=semaforo(e.horas_semana);
+      const canAuth=(session.rol==='gerente'||session.rol==='admin')&&e.horas_semana>9;
+      alertasHtml+=`<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;margin-bottom:6px;background:${s.css==='negro'?'#1f2937':'#fff1f2'};border:1px solid ${s.css==='negro'?'#374151':'#fca5a5'};color:${s.css==='negro'?'#fff':'inherit'}">
+        <div class="sem-dot ${s.dot}"></div>
+        <div style="flex:1;min-width:0"><div style="font-weight:700;font-size:13px">${esc(e.nombre)}</div><div style="font-size:11px;opacity:.7">${esc(e.puesto||'')} · ${esc(e.ubicacion||'')}</div></div>
+        <div style="font-size:18px;font-weight:900;flex-shrink:0">${e.horas_semana}h</div>
+        ${canAuth?`<div style="display:flex;gap:4px"><button class="btn-xs btn-green" onclick="authExtraMonitor('${e.num_emp}','autorizado')">✓</button><button class="btn-xs btn-red" onclick="authExtraMonitor('${e.num_emp}','rechazado')">✕</button></div>`:''}
+      </div>`;
+    });
+    alertasHtml+=`</div>`;
+  }
+
+  // Tabla
+  let tbodyHtml='';
+  if(filtered.length===0){
+    tbodyHtml=`<tr><td colspan="7" style="text-align:center;color:#9ca3af;padding:24px">Sin resultados con los filtros seleccionados</td></tr>`;
+  } else {
+    filtered.forEach((e,i)=>{
+      const s=semaforo(e.horas_semana);
+      const sabs=sabMes[e.num_emp]||0;
+      tbodyHtml+=`<tr>
+        <td class="num">${e.num_emp}</td>
+        <td style="font-weight:600;font-size:13px">${esc(e.nombre)}</td>
+        <td style="font-size:12px;color:#6b7280">${esc(e.puesto||'')}</td>
+        <td style="font-size:12px;color:#6b7280">${esc(e.ubicacion||'')}</td>
+        <td><span class="horas-badge ${s.hb}"><span class="sem-dot ${s.dot}"></span>${e.horas_semana}h</span></td>
+        <td style="text-align:center"><span style="font-weight:700;color:${sabs>0?'#ea580c':'#9ca3af'}">${sabs>0?sabs+'  📅':'—'}</span></td>
+        <td><span class="chip chip-${s.css==='verde'?'ok':s.css==='amarillo'?'alerta':'bloqueado'}">${s.label}</span></td>
+      </tr>`;
+    });
+  }
+
+  document.getElementById('mainContent').innerHTML=`
+    <div style="margin-bottom:14px"><div style="font-size:18px;font-weight:800;color:#1e3a6e">📊 Monitor de Horas Extras</div><div style="font-size:12px;color:#6b7280;margin-top:2px">Semana en curso · ${filtered.length} empleados</div></div>
+
+    <div class="summary-grid">
+      <div class="sum-card"><div class="sum-icon">👷</div><div class="sum-val">${filtered.length}</div><div class="sum-lbl">Personal visible</div></div>
+      <div class="sum-card"><div class="sum-icon">⏱</div><div class="sum-val">${totalH.toFixed(1)}h</div><div class="sum-lbl">Horas semana</div></div>
+      <div class="sum-card"><div class="sum-icon">🟡</div><div class="sum-val">${enLimite}</div><div class="sum-lbl">En límite (7-9h)</div></div>
+      <div class="sum-card"><div class="sum-icon">⚫</div><div class="sum-val">${exceden}</div><div class="sum-lbl">Exceden 9h</div></div>
+    </div>
+
+    ${alertasHtml}
+
+    <div class="monitor-filters">
+      <span style="font-size:12px;font-weight:700;color:#6b7280">Filtrar:</span>
+      <select class="filter-select" onchange="monFiltroSuc=this.value;buildMonitorHtml()">
+        <option value="todos">📍 Todas las sucursales</option>
+        ${sucursales.map(s=>`<option value="${esc(s)}" ${monFiltroSuc===s?'selected':''}>${esc(s)}</option>`).join('')}
+      </select>
+      <select class="filter-select" onchange="monFiltroPuesto=this.value;buildMonitorHtml()">
+        <option value="todos">💼 Todos los puestos</option>
+        ${puestos.map(p=>`<option value="${esc(p)}" ${monFiltroPuesto===p?'selected':''}>${esc(p)}</option>`).join('')}
+      </select>
+      <button class="btn-xs" style="background:#f3f4f6;color:#374151;border:2px solid #e5e7eb;padding:7px 14px;border-radius:10px" onclick="monFiltroSuc='todos';monFiltroPuesto='todos';buildMonitorHtml()">✕ Limpiar</button>
+      <button class="btn-xs btn-primary" style="padding:7px 14px;border-radius:10px" onclick="renderMonitor()">🔄 Actualizar</button>
+    </div>
+
+    <div class="monitor-table-wrap">
+      <table class="monitor-table">
+        <thead><tr>
+          <th>N° Emp</th><th>Nombre</th><th>Puesto</th><th>Sucursal</th><th>Horas semana</th><th>Sábs. mes</th><th>Semáforo</th>
+        </tr></thead>
+        <tbody>${tbodyHtml}</tbody>
+      </table>
+    </div>
+  `;
+}
+
+async function authExtraMonitor(num_emp,dec){
+  showLoading('Procesando autorización...');
+  try{
+    const r=await api(`registros?num_emp=${num_emp}&rol=operario`);
+    if(r.ok){
+      for(const reg of r.data.filter(x=>x.auth_gerente==='pendiente')){
+        await api('autorizar','PUT',{id:reg.id,decision:dec,nivel:'gerente',auth_num:session.num_emp});
+      }
+    }
+    hideLoading();await renderMonitor();
+  }catch(e){hideLoading();alert('Error: '+e.message);}
+}
+
+// ══════════════════════════════════════════════════════
+// SOLICITUDES
+// ══════════════════════════════════════════════════════
+async function renderRegistros(){
+  document.getElementById('mainContent').innerHTML=`<div class="empty"><div style="font-size:36px;margin-bottom:8px">⏳</div><div>Cargando solicitudes...</div></div>`;
+  showLoading('Cargando solicitudes...');
+  try{
+    const r=await api(`registros?num_emp=${session.num_emp}&rol=${session.rol}`);
+    hideLoading();
+    if(!r.ok){document.getElementById('mainContent').innerHTML=`<div class="empty">Error al cargar</div>`;return;}
+    cacheRegistros=r.data;
+    const vis=r.data;
+    const sorted=[...vis].sort((a,b)=>a.estado_final==='pendiente'?-1:1);
+    const totalH=vis.reduce((s,x)=>s+parseFloat(x.horas_dia||0),0);
+
+    let csvBtn=session.rol==='admin'&&vis.length>0?`<button class="btn btn-csv" onclick="exportCSV()">⬇ Descargar CSV (${vis.length})</button>`:'';
+    let cards=sorted.length===0?`<div class="empty"><div style="font-size:36px;margin-bottom:8px">📭</div><div>Sin solicitudes</div></div>`:'';
+
+    sorted.forEach(r2=>{
+      const s=semaforo(r2.horas_semana||r2.horas_dia);
+      const canJefe=(session.rol==='jefe'||session.rol==='admin')&&r2.auth_jefe==='pendiente';
+      const canGer=(session.rol==='gerente'||session.rol==='admin')&&r2.auth_gerente==='pendiente';
+      let authHtml='';
+      if(canJefe)authHtml+=`<div class="btn-row"><button class="btn btn-green" onclick="autorizar('${r2.id}','autorizado','jefe')">✓ Autorizar</button><button class="btn btn-red" onclick="autorizar('${r2.id}','rechazado','jefe')">✕ Rechazar</button></div>`;
+      if(canGer)authHtml+=`<div class="btn-row" style="margin-top:6px"><button class="btn btn-green" onclick="autorizar('${r2.id}','autorizado','gerente')">✓ Autorizar (${session.rol==='admin'?'Admin':'Gerente'})</button><button class="btn btn-red" onclick="autorizar('${r2.id}','rechazado','gerente')">✕ Rechazar</button></div>`;
+      cards+=`<div class="reg-card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div style="flex:1">
+            <div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px"><span style="font-weight:800;font-size:14px">${esc(r2.nombre)}</span><span style="font-size:12px;color:#9ca3af">${r2.num_emp} · ${esc(r2.puesto||'')}</span></div>
+            <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:5px">
+              <span class="chip chip-${r2.estado_lft||'ok'}">${(r2.estado_lft||'ok').toUpperCase()}</span>
+              <span class="chip chip-${r2.estado_final||'pendiente'}">${(r2.estado_final||'pendiente').toUpperCase()}</span>
+              <span class="chip chip-${s.css==='verde'?'ok':s.css==='amarillo'?'alerta':'bloqueado'}">${s.label}</span>
+              ${r2.auth_gerente==='pendiente'?`<span class="chip" style="background:#ede9fe;color:#6d28d9">Espera Gerente/Admin</span>`:''}
+            </div>
+            <div style="font-size:11px;color:#6b7280;margin-top:4px">${r2.fecha||''} ${r2.hora_registro||''} · ${esc(r2.ubicacion||'')} · ${esc(r2.depto||'')}</div>
+            <div style="font-size:13px;font-weight:700;margin-top:4px">${r2.horas_dia}h hoy · Acum: ${r2.horas_semana||r2.horas_dia}h</div>
+            <div class="reg-causa"><b>Categoría:</b> ${esc(r2.causa_cat||'')} <br><b>¿Por qué?</b> ${esc(r2.causa_p2||'')} <br><b>Causa raíz:</b> ${esc(r2.causa_p3||'')}</div>
+            <div class="reg-id">ID: ${r2.id}</div>
+          </div>
+          ${session.rol==='admin'?`<button onclick="delReg('${r2.id}')" style="background:none;border:none;cursor:pointer;color:#f87171;font-size:18px;margin-left:8px">✕</button>`:''}
+        </div>
+        ${authHtml}
+      </div>`;
+    });
+
+    document.getElementById('mainContent').innerHTML=`
+      ${csvBtn}
+      <div class="summary-grid">
+        <div class="sum-card"><div class="sum-icon">📋</div><div class="sum-val">${vis.length}</div><div class="sum-lbl">Registros</div></div>
+        <div class="sum-card"><div class="sum-icon">👷</div><div class="sum-val">${new Set(vis.map(x=>x.num_emp)).size}</div><div class="sum-lbl">Empleados</div></div>
+        <div class="sum-card"><div class="sum-icon">⏱</div><div class="sum-val">${totalH.toFixed(1)}h</div><div class="sum-lbl">Horas totales</div></div>
+        <div class="sum-card"><div class="sum-icon">⏳</div><div class="sum-val">${vis.filter(x=>x.estado_final==='pendiente').length}</div><div class="sum-lbl">Pendientes</div></div>
+      </div>
+      <button class="btn" style="background:#eff6ff;color:#1e3a6e;margin-bottom:14px;width:auto;padding:8px 16px;border-radius:10px;font-size:13px" onclick="renderRegistros()">🔄 Actualizar</button>
+      ${cards}`;
+  }catch(e){hideLoading();document.getElementById('mainContent').innerHTML=`<div class="empty">Error: ${e.message}</div>`;}
+}
+
+async function autorizar(id,dec,nivel){
+  showLoading('Procesando...');
+  try{
+    const r=await api('autorizar','PUT',{id,decision:dec,nivel,auth_num:session.num_emp});
+    hideLoading();
+    if(r.ok)renderRegistros();else alert('Error: '+r.error);
+  }catch(e){hideLoading();alert('Error: '+e.message);}
+}
+
+async function delReg(id){
+  if(!confirm('¿Eliminar este registro?'))return;
+  showLoading('Eliminando...');
+  try{await api('registros?id='+id,'DELETE');hideLoading();cacheRegistros=cacheRegistros.filter(x=>x.id!==id);renderRegistros();}
+  catch(e){hideLoading();}
+}
+
+function exportCSV(){
+  const h=['ID','Fecha','Hora','Nombre','N° Emp','Puesto','Área','Sucursal','Horas día','Acum. semana','Semáforo','Categoría','¿Por qué?','Causa raíz','Estado LFT','Auth Jefe','Auth Gerente','Estado final'];
+  const rows=cacheRegistros.map(r=>{const s=semaforo(r.horas_semana||r.horas_dia);return[r.id,r.fecha,r.hora_registro,r.nombre,r.num_emp,r.puesto,r.depto,r.ubicacion,r.horas_dia,r.horas_semana,s.label,r.causa_cat,r.causa_p2,r.causa_p3,r.estado_lft,r.auth_jefe,r.auth_gerente,r.estado_final];});
+  const csv=[h,...rows].map(r=>r.map(v=>`"${String(v||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`horas_extras_${getNow().fecha}.csv`;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+}
+
+// ══════════════════════════════════════════════════════
+// SÁBADOS
+// ══════════════════════════════════════════════════════
+async function renderSabados(){
+  showLoading('Cargando sábados...');
+  try{
+    const r=await api(`sabados?num_emp=${session.num_emp}&rol=${session.rol}`);
+    hideLoading();
+    cacheSabados=r.ok?r.data:[];
+    let html='';
+    if(session.rol==='jefe'||session.rol==='admin')
+      html+=`<button class="btn btn-orange" style="margin-bottom:14px;width:auto;padding:10px 20px;border-radius:12px" onclick="abrirModalSab()">+ Solicitar Sábado Laborado</button>`;
+    if(cacheSabados.length===0)html+=`<div class="empty"><div style="font-size:36px;margin-bottom:8px">📅</div><div>Sin solicitudes de sábado</div></div>`;
+    else cacheSabados.forEach(s=>{
+      const pers=Array.isArray(s.personal)?s.personal:(typeof s.personal==='string'?JSON.parse(s.personal||'[]'):[]);
+      const canAuth=(session.rol==='gerente'||session.rol==='admin')&&s.auth_gerente==='pendiente';
+      html+=`<div class="reg-card">
+        <div style="font-weight:800;font-size:14px">📅 Sábado ${s.fecha_sabado}</div>
+        <div style="font-size:12px;color:#6b7280;margin-top:3px">Solicitado por: ${esc(s.jefe_nombre||'')} · ${esc(s.ubicacion||'')}</div>
+        <div style="margin-top:6px"><span class="chip chip-${s.auth_gerente==='autorizado'?'autorizado':s.auth_gerente==='rechazado'?'rechazado':'pendiente'}">${(s.auth_gerente||'pendiente').toUpperCase()}</span></div>
+        <div style="font-size:13px;margin-top:8px"><b>Personal (${pers.length}):</b> ${pers.map(p=>esc(p.nombre||p)).join(', ')}</div>
+        <div class="reg-causa"><b>Causa raíz:</b> ${esc(s.causa_p3||'')} — ${esc(s.causa_cat||'')}</div>
+        <div class="reg-id">ID: ${s.id}</div>
+        ${canAuth?`<div class="btn-row"><button class="btn btn-green" onclick="authSab('${s.id}','autorizado')">✓ Autorizar sábado</button><button class="btn btn-red" onclick="authSab('${s.id}','rechazado')">✕ Rechazar</button></div>`:''}
+      </div>`;
+    });
+    document.getElementById('mainContent').innerHTML=html;
+  }catch(e){hideLoading();document.getElementById('mainContent').innerHTML=`<div class="empty">Error: ${e.message}</div>`;}
+}
+
+async function authSab(id,dec){
+  showLoading('Procesando...');
+  try{const r=await api('sabados','PUT',{id,decision:dec,auth_num:session.num_emp});hideLoading();if(r.ok)renderSabados();else alert('Error: '+r.error);}
+  catch(e){hideLoading();alert('Error: '+e.message);}
+}
+
+async function abrirModalSab(){
+  sabCr={cat:null,p1:null,p2:null,p3:null};personalSel=[];
+  if(cacheMonitor.length===0){showLoading('Cargando equipo...');const r=await api(`monitor?num_emp=${session.num_emp}&rol=${session.rol}`);hideLoading();if(r.ok)cacheMonitor=r.data;}
+  const sel=document.getElementById('fs_personal_sel');
+  sel.innerHTML='<option value="">-- Seleccionar empleado --</option>';
+  cacheMonitor.forEach(e=>{sel.innerHTML+=`<option value="${e.num_emp}" data-nombre="${esc(e.nombre)}">${e.nombre} (${e.num_emp})</option>`;});
+  document.getElementById('personalSelList').innerHTML='';
+  document.getElementById('fs_fecha').value='';
+  renderSabModal();
+  document.getElementById('modalSab').classList.remove('hidden');
+}
+function renderSabModal(){document.getElementById('sabArbol').innerHTML=buildArbolHtml('sabCr',false);}
+function agregarPersonal(){
+  const sel=document.getElementById('fs_personal_sel');if(!sel.value)return;
+  const nombre=sel.options[sel.selectedIndex].dataset.nombre;
+  if(personalSel.find(p=>p.num_emp===sel.value))return;
+  personalSel.push({num_emp:sel.value,nombre});sel.value='';
+  document.getElementById('personalSelList').innerHTML=personalSel.map(p=>`<div class="personal-tag">${esc(p.nombre)}<button class="tag-x" onclick="quitarPersonal('${p.num_emp}')">✕</button></div>`).join('');
+}
+function quitarPersonal(num){
+  personalSel=personalSel.filter(p=>p.num_emp!==num);
+  document.getElementById('personalSelList').innerHTML=personalSel.map(p=>`<div class="personal-tag">${esc(p.nombre)}<button class="tag-x" onclick="quitarPersonal('${p.num_emp}')">✕</button></div>`).join('');
+}
+function closeModalSab(){document.getElementById('modalSab').classList.add('hidden');}
+async function guardarSabado(){
+  const fecha=document.getElementById('fs_fecha').value;
+  const err=document.getElementById('modalSabErr');
+  if(!fecha){err.textContent='Selecciona la fecha.';err.classList.remove('hidden');return;}
+  if(personalSel.length===0){err.textContent='Agrega al menos un empleado.';err.classList.remove('hidden');return;}
+  if(!sabCr.p3){err.textContent='Completa el análisis de causa raíz.';err.classList.remove('hidden');return;}
+  err.classList.add('hidden');
+  const nd=ARBOL.find(a=>a.id===sabCr.cat);
+  showLoading('Enviando solicitud...');
+  try{
+    const r=await api('sabados','POST',{
+      fecha_sabado:fecha,jefe_num:session.num_emp,jefe_nombre:session.nombre,
+      ubicacion:session.ubicacion,depto:session.depto,personal:personalSel,
+      causa_cat:nd?.label||sabCr.cat,causa_p1:sabCr.p1,causa_p2:sabCr.p2,
+      causa_p3:sabCr.p3,causa_texto:buildCausaTexto('sabCr'),
+      gerente_num:session.rol==='jefe'?session.gerente_num:'0000'
+    });
+    hideLoading();
+    if(r.ok){closeModalSab();alert('✅ Solicitud enviada para autorización.');renderSabados();}
+    else{err.textContent='Error: '+r.error;err.classList.remove('hidden');}
+  }catch(e){hideLoading();err.textContent='Error: '+e.message;err.classList.remove('hidden');}
+}
+
+// ══════════════════════════════════════════════════════
+// USUARIOS — solo admin
+// ══════════════════════════════════════════════════════
+async function renderUsuarios(){
+  showLoading('Cargando usuarios...');
+  try{
+    const r=await api('usuarios');hideLoading();
+    cacheUsuarios=r.ok?r.data:[];
+    let html=`<button class="btn btn-primary" style="margin-bottom:14px;width:auto;padding:10px 20px;border-radius:12px" onclick="abrirModalUsr(null)">+ Nuevo usuario</button>`;
+    html+=`<div class="table-wrap"><table><thead><tr><th>N° Emp</th><th>Nombre</th><th>Puesto</th><th>Sucursal</th><th>Rol</th><th>Estatus</th><th>Acciones</th></tr></thead><tbody>`;
+    cacheUsuarios.forEach(u=>{
+      const rc={operario:'badge-op',jefe:'badge-jefe',gerente:'badge-ger',admin:'badge-admin'}[u.rol]||'badge-admin';
+      html+=`<tr>
+        <td style="font-weight:700">${u.num_emp}</td>
+        <td>${esc(u.nombre)}</td>
+        <td style="font-size:12px">${esc(u.puesto||'')}</td>
+        <td style="font-size:12px">${esc(u.ubicacion||'')}</td>
+        <td><span class="badge ${rc}">${u.rol}</span></td>
+        <td><span class="chip ${u.activo?'chip-ok':'chip-rechazado'}">${u.activo?'ACTIVO':'BAJA'}</span></td>
+        <td style="white-space:nowrap">
+          <button class="btn-xs" style="background:#eff6ff;color:#1e3a6e;border:1px solid #93c5fd;margin-right:4px" onclick="abrirModalUsr('${u.num_emp}')">✏ Editar</button>
+          <button class="btn-xs" style="background:#fef2f2;color:#dc2626;border:1px solid #fca5a5" onclick="toggleBaja('${u.num_emp}',${u.activo})">${u.activo?'Dar baja':'Reactivar'}</button>
+        </td>
+      </tr>`;
+    });
+    html+=`</tbody></table></div>`;
+    document.getElementById('mainContent').innerHTML=html;
+  }catch(e){hideLoading();document.getElementById('mainContent').innerHTML=`<div class="empty">Error: ${e.message}</div>`;}
+}
+
+function abrirModalUsr(num_emp){
+  editingUser=num_emp;
+  const u=num_emp?cacheUsuarios.find(x=>x.num_emp===num_emp):null;
+  document.getElementById('modalUsrTitle').textContent=num_emp?'Editar usuario':'Nuevo usuario';
+  document.getElementById('fu_num').value=u?.num_emp||'';document.getElementById('fu_num').disabled=!!num_emp;
+  document.getElementById('fu_pass').value='';
+  document.getElementById('fu_nombre').value=u?.nombre||'';document.getElementById('fu_puesto').value=u?.puesto||'';
+  document.getElementById('fu_ubicacion').value=u?.ubicacion||'';document.getElementById('fu_depto').value=u?.depto||'';
+  document.getElementById('fu_rol').value=u?.rol||'operario';document.getElementById('fu_jefe').value=u?.jefe_num||'';
+  document.getElementById('fu_gerente').value=u?.gerente_num||'';document.getElementById('fu_email').value=u?.email||'';
+  document.getElementById('fu_activo').value=String(u?.activo!==false);
+  document.getElementById('modalUsrErr').classList.add('hidden');
+  document.getElementById('modalUsr').classList.remove('hidden');
+}
+function closeModalUsr(){document.getElementById('modalUsr').classList.add('hidden');}
+async function guardarUsuario(){
+  const err=document.getElementById('modalUsrErr');
+  const body={num_emp:document.getElementById('fu_num').value.trim(),password:document.getElementById('fu_pass').value||undefined,nombre:document.getElementById('fu_nombre').value.trim(),puesto:document.getElementById('fu_puesto').value.trim(),ubicacion:document.getElementById('fu_ubicacion').value.trim(),depto:document.getElementById('fu_depto').value.trim(),rol:document.getElementById('fu_rol').value,jefe_num:document.getElementById('fu_jefe').value.trim()||null,gerente_num:document.getElementById('fu_gerente').value.trim()||null,email:document.getElementById('fu_email').value.trim()||null,activo:document.getElementById('fu_activo').value==='true'};
+  if(!body.num_emp||!body.nombre){err.textContent='N° empleado y nombre son obligatorios.';err.classList.remove('hidden');return;}
+  err.classList.add('hidden');
+  showLoading('Guardando usuario...');
+  try{
+    const r=editingUser?await api('usuarios','PUT',body):await api('usuarios','POST',body);
+    hideLoading();
+    if(r.ok){closeModalUsr();renderUsuarios();}else{err.textContent='Error: '+r.error;err.classList.remove('hidden');}
+  }catch(e){hideLoading();err.textContent='Error: '+e.message;err.classList.remove('hidden');}
+}
+async function toggleBaja(num_emp,activo){
+  if(!confirm(activo?'¿Dar de baja?':'¿Reactivar?'))return;
+  showLoading('Actualizando...');
+  try{await api('usuarios','PUT',{num_emp,activo:!activo});hideLoading();renderUsuarios();}
+  catch(e){hideLoading();}
+}
+</script>
+</body>
+</html>
